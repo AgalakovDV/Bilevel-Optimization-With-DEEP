@@ -1,0 +1,9 @@
+[dddd]
+size=2
+alphas=1 2
+start_damage=2 0
+distance=0 1 1;1 0 1;1 1 0;
+count_types_robots=1
+v_path=1
+v_task=2
+c_0=5
