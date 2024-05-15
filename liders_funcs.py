@@ -28,9 +28,9 @@ def create_follower_param_file():
 # start_damages - список начального ущерба, нанесенного задачами
 # alphas - список скоростей приращения ущерба задач
 # lambda_1 - параметр ущерба, принимается за 1
-def find_all_damage(t_end : list, start_damages : list, alphas : list, lambda_1 = 1):
+def find_all_damage(t_end : list, start_damages : list, v_damage : list, lambda_1 = 1):
     res = 0
-    for q, alp, t in zip(start_damages, alphas, t_end):
+    for q, alp, t in zip(start_damages, v_damage, t_end):
         res += (q + alp*t)
     return res*lambda_1
  
@@ -42,10 +42,57 @@ def cost_renting(c_0 : list):
     
 
 # running_cost_robots() в статье это F3 (3.8)
-def running_cost_robots():
-    print("running_cost_robots() надо доделать")
-    return 0
-    
+def running_cost_robots(c_r : list, t_end : list):
+    return sum(c_r)*max(t_end)
+
+
+# функция лидера
+def f_lead(t_end : list, start_damages : list, v_damage : list, c_0 : list, c_r : list, lambda_1 = 1):
+    res1 = find_all_damage(t_end, start_damages, v_damage, lambda_1)
+    res2 = cost_renting(c_0)
+    res3 = running_cost_robots(c_r, t_end)
+    return res1 + res2 + res3
+
+
+# функция последователя
+def f_follow(t_end):
+    return max(t_end)
+
+
+# =============================================================================
+# # вычисление удельных затрат c_r
+# def find_cr(count_robots, distances, count_task):
+#     maxS = 0
+#     for i in range(count_task + 1):
+#         for j in range(i+1, len(distances)):
+#             if distances[i][j] > maxS:
+#                 maxS = distances[i][j]     
+#     minS = maxS
+#     for i in range(count_task + 1):
+#         for j in range(i+1, len(distances)):
+#             if distances[i][j] < minS and 0 < distances[i][j]:
+#                 minS = distances[i][j]
+#     cr = 0.5 * (minS + maxS) * count_task / count_robots
+#     return cr
+#   
+# 
+# # вычисление всех затрат роботов, в статье это F3 (3.8)  
+# def find_c_all(distances, count_task, t_end : list):
+#     maxS = 0
+#     for i in range(count_task + 1):
+#         for j in range(i+1, len(distances)):
+#             if distances[i][j] > maxS:
+#                 maxS = distances[i][j]    
+#     minS = maxS
+#     for i in range(count_task + 1):
+#         for j in range(i+1, len(distances)):
+#             if distances[i][j] < minS and 0 < distances[i][j]:
+#                 minS = distances[i][j]
+#     c_r_sum = 0.5 * (minS + maxS) * count_task
+#     c_all = c_r_sum * max(t_end) 
+#     return c_all
+# =============================================================================
+
 
 # rastrigin_func
 #!/usr/bin/env python3  
@@ -56,17 +103,18 @@ import os
 #leader_param_file = os.getenv('LEADER_PARAM_FILE')
 #follower_param_file = sys.argv[1]
 leader_param_file = "leader_params"
+follower_param_file = "follower_params"
 
 
-
-size = 0
-alphas = []
+count_tasks = 0
+v_damage = []
 start_damage = []
-distance = []
+distances = []
 count_types_robots = 0
 v_path = []
 v_task = []
 c_0 = []
+c_r = []
 
 with open(leader_param_file, 'r') as fx:
     next(fx)
@@ -74,11 +122,11 @@ with open(leader_param_file, 'r') as fx:
     for line_id, p in enumerate(fx):
         pp = p.split('=')[1]
         if (0 == line_id):  # count tasks
-            size = int(pp)
-        elif (1 == line_id):    # alphas (скорости приращения задач)
+            count_tasks = int(pp)
+        elif (1 == line_id):    # v_damage (скорости приращения задач)
             lst_str = pp.split(' ')
             for el in lst_str:
-                alphas.append(float(el))
+                v_damage.append(float(el))
         elif (2 == line_id):    # start damages of tasks
             lst_str = pp.split(' ')
             for el in lst_str:
@@ -90,7 +138,7 @@ with open(leader_param_file, 'r') as fx:
                 lst_dist = []
                 for el_s in lst_str_dist:
                     lst_dist.append(float(el_s)) # создание списка расстояний от места до других
-                distance.append(lst_dist)
+                distances.append(lst_dist)
         elif (4 == line_id):  # count types of robots
             count_types_robots = int(pp)
         elif (5 == line_id):    # скорости перемещения роботов
@@ -101,33 +149,57 @@ with open(leader_param_file, 'r') as fx:
             lst_str = pp.split(' ')
             for el in lst_str:
                 v_task.append(float(el))
-        elif (7 == line_id):    # начальная стаимость роботов
+        elif (7 == line_id):    # начальная стоимость роботов
             lst_str = pp.split(' ')
             for el in lst_str:
                 c_0.append(float(el))
+        elif (8 == line_id):    # удельный расход роботов
+            lst_str = pp.split(' ')
+            for el in lst_str:
+                c_r.append(float(el))
+
         
-print(size)
-print(alphas)
+print(count_tasks)
+print(v_damage)
 print(start_damage)
-print(distance)
+print(distances)
 print(count_types_robots)
 print(v_path)
 print(v_task)
 print(c_0)
+print(c_r)
         
 
-#yy = list()
-
-#with open(follower_param_file, 'r') as fy:
-#    next(fy)
-#    next(fy)
-#    for p in fy:
-#        pp = p.split('=')[1]
-#        yy.append(float(pp))
-
-#res = rastrign_func(xx, yy)
-
-#print("{},{}".format(res[0], res[1]))
+count_robots = []
 
 
+# with open(follower_param_file, 'r') as fx:
+#     next(fx)
+#     for line_id, p in enumerate(fx):
+#         pp = p.split('=')[1]
+#         if (0 == line_id): # количество роботов каждого типа
+#             lst_str = pp.split(' ')
+#             for el in lst_str:
+#                 count_robots.append(float(el))
+#         elif (1 == line_id):    # удельные расходы роботов
+#             lst_str = pp.split(' ')
+#             for el in lst_str:
+#                 c_r.append(float(el))
+
+
+# 1 узнать максимальную мощность робота и максимальную скорость приращения задачи
+# а затем узнать минимальное число роботов, меньше которого задачу точно не решить
+max_v_task = max(v_task)
+max_alphas = max(v_damage)
+min_count_robots = max_alphas // max_v_task
+while max_alphas > min_count_robots*max_v_task:
+    min_count_robots += 1
+
+print(f"count robos = {min_count_robots}")
+
+# запуск программы последователя для числа роботов
+count_robots = min_count_robots
+while (count_robots > 0):
+    count_robots -= 10
+    
 
