@@ -42,15 +42,18 @@ def cost_renting(c_0 : list):
     
 
 # running_cost_robots() в статье это F3 (3.8)
-def running_cost_robots(c_r : list, t_end : list):
-    return sum(c_r)*max(t_end)
+def running_cost_robots(c_r : list, t_end : list, count_robots : list):
+    res = 0
+    for (r, c) in zip(count_robots, c_r):
+        res += (r*c)
+    return res * max(t_end)
 
 
 # функция лидера
-def f_lead(t_end : list, start_damages : list, v_damage : list, c_0 : list, c_r : list, lambda_1 = 1):
+def f_lead(t_end : list, start_damages : list, v_damage : list, c_0 : list, c_r : list, count_robots : list, lambda_1 = 1):
     res1 = find_all_damage(t_end, start_damages, v_damage, lambda_1)
     res2 = cost_renting(c_0)
-    res3 = running_cost_robots(c_r, t_end)
+    res3 = running_cost_robots(c_r, t_end, count_robots)
     return res1 + res2 + res3
 
 
